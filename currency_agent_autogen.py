@@ -1,32 +1,22 @@
 
 from typing import Literal
 import os
+import asyncio
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
+from autogen_ext.models.openai import OpenAIChatCompletionClient
+
+from database_agent import AgentResponse
+
+from autogen_agentchat.agents import AssistantAgent
+from autogen_agentchat.ui import Console
 
 import autogen
 from autogen.cache import Cache
+from autogen_core.tools import FunctionTool
 
-llm_config = {
-    "config_list": [{"model": "gpt-4", "api_key": os.environ["OPENAI_API_KEY"]}],
-}
-
-chatbot = autogen.AssistantAgent(
-    name="chatbot",
-    system_message="For currency exchange tasks, only use the functions you have been provided with. Reply TERMINATE when the task is done.",
-    llm_config=llm_config,
-)
-
-# create a UserProxyAgent instance named "user_proxy"
-user_proxy = autogen.UserProxyAgent(
-    name="user_proxy",
-    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
-    human_input_mode="NEVER",
-    max_consecutive_auto_reply=10,
-    code_execution_config={"use_docker":False}
-)
-
+open_ai = OpenAIChatCompletionClient(model="gpt-4o-mini")
 
 CurrencySymbol = Literal["USD", "EUR"]
 
@@ -41,20 +31,27 @@ def exchange_rate(base_currency: CurrencySymbol, quote_currency: CurrencySymbol)
     else:
         raise ValueError(f"Unknown currencies {base_currency}, {quote_currency}")
 
-
-@user_proxy.register_for_execution()
-@chatbot.register_for_llm(description="Currency exchange calculator.")
 def currency_calculator(
     base_amount: Annotated[float, "Amount of currency in base_currency"],
-    base_currency: Annotated[CurrencySymbol, "Base currency"] = "USD",
-    quote_currency: Annotated[CurrencySymbol, "Quote currency"] = "EUR",
+    base_currency: Annotated[CurrencySymbol, "Base currency"],
+    quote_currency: Annotated[CurrencySymbol, "Quote currency"],
 ) -> str:
     quote_amount = exchange_rate(base_currency, quote_currency) * base_amount
     return f"{quote_amount} {quote_currency}"
 
-#%%
-with Cache.disk() as cache:
-    # start the conversation
-    res = user_proxy.initiate_chat(
-        chatbot, message="How much is 123.45 USD in EUR?", summary_method="reflection_with_llm", cache=cache
-    )
+tool = FunctionTool(currency_calculator, description="Currency exchange calculator.", strict=True)
+
+agent = AssistantAgent(
+    name="chatbot",
+    system_message="For currency exchange tasks, only use the functions you have been provided with. Reply when the task is done.",
+    model_client=open_ai,
+    tools=[tool],
+    output_content_type=AgentResponse
+)
+
+async def main() -> None:
+    stream = agent.run_stream(task="How much is 100 USD in Euros?")
+    await Console(stream)
+
+
+asyncio.run(main())

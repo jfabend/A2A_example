@@ -9,7 +9,6 @@ from typing_extensions import Annotated, TypedDict
 
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, SystemMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from pydantic import BaseModel, ConfigDict
 from langgraph.managed import IsLastStep, RemainingSteps
