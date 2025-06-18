@@ -5,7 +5,7 @@ from typing import AsyncIterable, Union
 
 import utils as utils
 from abc_task_manager import InMemoryTaskManager
-from a2a_wrapper_database_agent import DatabaseAgent
+from a2a_wrapper_currency_agent import CurrencyAgent
 from custom_types import (
     Artifact,
     InternalError,
@@ -31,9 +31,9 @@ from push_notification_auth import PushNotificationSenderAuth
 logger = logging.getLogger(__name__)
 
 
-class AgentTaskManager(InMemoryTaskManager):
+class CurrencyAgentTaskManager(InMemoryTaskManager):
     def __init__(
-        self, agent: DatabaseAgent, notification_sender_auth: PushNotificationSenderAuth
+        self, agent: CurrencyAgent, notification_sender_auth: PushNotificationSenderAuth
     ):
         super().__init__()
         self.agent = agent
@@ -101,12 +101,12 @@ class AgentTaskManager(InMemoryTaskManager):
     ) -> JSONRPCResponse | None:
         task_send_params: TaskSendParams = request.params
         if not utils.are_modalities_compatible(
-            task_send_params.acceptedOutputModes, DatabaseAgent.SUPPORTED_CONTENT_TYPES
+            task_send_params.acceptedOutputModes, CurrencyAgent.SUPPORTED_CONTENT_TYPES
         ):
             logger.warning(
                 "Unsupported output mode. Received %s, Support %s",
                 task_send_params.acceptedOutputModes,
-                DatabaseAgent.SUPPORTED_CONTENT_TYPES,
+                CurrencyAgent.SUPPORTED_CONTENT_TYPES,
             )
             return utils.new_incompatible_types_error(request.id)
 
