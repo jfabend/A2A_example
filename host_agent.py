@@ -210,6 +210,7 @@ You have two tools:
 2) send_task_tool(agent_name, message): Sends a text request to the agent.
 
 If the user wants information on products, call 'send_task_tool("some_agent_name", "How many products of type A do we have?")'.
+If the user is interested into converting currencies, call 'send_task_tool("some_agent_name", "How much is an amount of currency A in currency B?")'.
 
 Return the final result to the user.
 """

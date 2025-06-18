@@ -1,28 +1,9 @@
-# a2a_wrapper_currency_agent.py
-"""A thin wrapper that adapts the **autogen**‐based `currency_agent_autogen.py` to the
-A2A interface that the front‑end expects (same surface as `a2a_wrapper_database_agent`).
-
-The goals are:
-1. Provide a synchronous **invoke** method that returns a dict with the standard
-   keys `is_task_complete`, `require_user_input`, and `content`.
-2. Provide an asynchronous **stream** generator that yields the same kind of dicts
-   for partial results and finishes with a final *completed* message.
-3. Keep the public contract identical to the database wrapper so that callers can
-   swap agents without code changes.
-
-The implementation intentionally keeps things light‑weight: we do not attempt to
-re‑create the full LangGraph state logic because the Autogen AssistantAgent
-already handles tool calls internally and always finishes its response with the
-follow‑up sentence *"Is there anything else I can do?"* as defined in
-`currency_agent_autogen.py`.
-"""
-
 from __future__ import annotations
 
 import asyncio
 from typing import Any, AsyncIterable, Dict
 from typing_extensions import Final
-
+from database_agent import AgentResponse
 from currency_agent_autogen import currency_agent, get_currency_agent
 
 
@@ -44,29 +25,20 @@ class CurrencyAgent:
     # ──────────────────────────────────────────────────────────────────────
     # Synchronous interface
     # ──────────────────────────────────────────────────────────────────────
-    def invoke(self, query: str, sessionId: str | None = None) -> Dict[str, Any]:
-        """Run the Autogen agent synchronously.
-
-        Parameters
-        ----------
-        query:
-            The user prompt.
-        sessionId:
-            Included for API compatibility; the current Autogen version does not
-            expose a thread/session concept that we can map onto, but we accept
-            the argument so that callers do not need `isinstance` checks.
-        """
-
-        # Autogen's `.run()` is blocking and returns the assistant's final
-        # response (either as a string _or_ a Message object depending on the
-        # version). We try to extract `.content` first and fall back to `str()`.
-        response = self.autogen_agent.run(task=query)
-        content: str = getattr(response, "content", str(response))
+    async def invoke(self, query: str, sessionId: str | None = None) -> Dict[str, Any]:
+        """Return the TaskResult produced by Autogen, asynchronously."""
+        task_result = await self.autogen_agent.run(task=query)
+        final_msg = task_result.messages[-1].content
 
         return {
             "is_task_complete": True,
             "require_user_input": False,
-            "content": content,
+            "content": final_msg,
+            "structured_response": {
+                "status": "completed",
+                "message": final_msg,
+            },
+            "state": task_result,
         }
 
     # ──────────────────────────────────────────────────────────────────────
