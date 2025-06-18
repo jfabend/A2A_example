@@ -53,5 +53,6 @@ The host agent asks the user for input and communicates with the other agents vi
 
 ## Example questions
 
+Which agents can you leverage?
 How much is 20 Euros in USD?
 How many different T-Shirts does our company sell?
