@@ -8,7 +8,7 @@ from a2a_wrapper_database_agent import DatabaseAgent
 from custom_types import AgentCapabilities, AgentCard, AgentSkill, MissingAPIKeyError
 from push_notification_auth import PushNotificationSenderAuth
 from server import A2AServer
-from task_manager import AgentTaskManager
+from task_manager_database_agent import DatabaseAgentTaskManager
 
 load_dotenv()
 
@@ -48,7 +48,7 @@ def main(host, port):
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(
+            task_manager=DatabaseAgentTaskManager(
                 agent=DatabaseAgent(), notification_sender_auth=notification_sender_auth
             ),
             host=host,

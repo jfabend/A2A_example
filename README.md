@@ -1,4 +1,4 @@
-# A2A + MCP Example
+# A2A (+ MCP) Example
 
 This project demonstrates communication between agents using the **Agent-to-Agent (A2A)** protocol in combination with the **Model-Context-Protocol (MCP)**.
 
@@ -6,14 +6,14 @@ This project demonstrates communication between agents using the **Agent-to-Agen
 
 ## 🔧 Components
 
-- **mcp_app.py**
-  MCP server providing tools (functions/endpoints) that can be used by agents.
+- **database_agent.py**
+  Database Agent — Counts inventory. LangGraph-based.
 
-- **agentpartner.py**
-  Agent B — uses tools exposed by the MCP server.
+- **currency_agent.py**
+  Currency Agent — Converts USD <-> EUR. Autogen-based.
 
 - **host_agent.py**
-  Agent A — communicates with Agent B using the A2A protocol.
+  Host Agent - Delegates tasks to the other two agents. LangGraph ReAct Agent.
 
 ---
 
@@ -25,37 +25,33 @@ This project demonstrates communication between agents using the **Agent-to-Agen
 pip install -r requirements.txt
 ```
 
-### 2. Start the MCP Server
+### 2. Run the Database Agent (in a 1st terminal)
 
 ```bash
-python mcp_app.py
+python a2a_server_db_agent.py
 ```
 
-This will start the MCP server that exposes tool endpoints.
+The database agent starts and waits for instructions.
 
-### 3. Run Agent B (agentpartner)
+### 3. Run the Currency Agent (in a 2nd terminal)
 
 ```bash
-python agentpartner.py
+python a2a_server_currency_agent.py
 ```
 
-Agent B will register itself and wait for instructions from Agent A.
+The currency agent starts and waits for instructions.
 
-### 4. Run Agent A (host agent)
+### 4. Run the host agent (in a 3rd terminal)
 
 ```bash
 python host_agent.py
 ```
 
-Agent A initiates communication with Agent B using the A2A protocol and calls MCP tools via Agent B.
+The host agent asks the user for input and communicates with the other agents via A2A.
 
 ---
 
-## ✅ Expected Result
+## Example questions
 
-Agent A sends a request to Agent B via A2A.
-Agent B uses the MCP protocol to invoke tools and returns the result.
-
----
-
-Feel free to extend this setup with more tools or agents!
+How much is 20 Euros in USD?
+How many different T-Shirts does our company sell?
