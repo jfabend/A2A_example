@@ -4,7 +4,7 @@ import os
 import click
 from dotenv import load_dotenv
 
-from integration_database_agent import DatabaseAgent
+from a2a_wrapper_database_agent import DatabaseAgent
 from custom_types import AgentCapabilities, AgentCard, AgentSkill, MissingAPIKeyError
 from push_notification_auth import PushNotificationSenderAuth
 from server import A2AServer
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @click.option("--host", "host", default="localhost")
 @click.option("--port", "port", default=8000)
 def main(host, port):
-    """Starts the Currency Agent server."""
+    """Starts the Database Agent server."""
     try:
         if not os.getenv("OPENAI_API_KEY"):
             raise MissingAPIKeyError("OPENAI_API_KEY environment variable not set.")

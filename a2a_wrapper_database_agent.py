@@ -16,6 +16,7 @@ StructuredResponse = Union[dict, BaseModel]
 
 memory = MemorySaver()
 
+#TODO INSTEAD OF SINGLE A2A WRAPPERS FOR EACH AGENT WE COULD CREATE AN ABSTRACT A2A AGENT CLASS
 
 # def _fetch_mcp_tools_sync() -> list:
 #     """
@@ -47,13 +48,6 @@ class DatabaseAgent:
        self.graph.invoke({"messages": [("user", query)]}, config)
        print("got answer from Database agent")
        return self.get_agent_response(config)
-
-    #def invoke(self, query, sessionId) -> str:
-    #    return {
-    #        "is_task_complete": True,
-    #        "require_user_input": False,
-    #        "content": AIMessage(content="Das ist ein statische Nachricht."),
-    #    }
 
     async def stream(self, query, sessionId) -> AsyncIterable[Dict[str, Any]]:
         inputs = {"messages": [("user", query)]}

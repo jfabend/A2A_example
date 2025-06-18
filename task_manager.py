@@ -5,7 +5,7 @@ from typing import AsyncIterable, Union
 
 import utils as utils
 from abc_task_manager import InMemoryTaskManager
-from integration_database_agent import DatabaseAgent
+from a2a_wrapper_database_agent import DatabaseAgent
 from custom_types import (
     Artifact,
     InternalError,

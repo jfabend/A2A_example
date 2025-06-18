@@ -232,13 +232,13 @@ app = typer.Typer()
 
 
 @app.command()
-def run_agent(remote_url: str = "http://localhost:8000"):
+def run_agent(remote_url: List[str] = ["http://localhost:8000", "http://localhost:8001"]):
     """
     Start a synchronous HostAgent pointing at 'remote_url'
     and run a simple conversation loop.
     """
     # 1) Build the HostAgent
-    host_agent = HostAgent([remote_url])
+    host_agent = HostAgent(remote_url)
 
     host_agent.initialize()
     react_agent = build_react_agent(host_agent)

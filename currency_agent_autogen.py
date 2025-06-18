@@ -1,16 +1,14 @@
 from typing import Literal, Annotated
 import asyncio
 
-from pydantic import BaseModel, Field
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.ui import Console
 from autogen_core.tools import FunctionTool
 
-# ── set up the OpenAI client ────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────────────────
 open_ai = OpenAIChatCompletionClient(model="gpt-4o-mini")
 
-# ── currency-exchange helper and tool definition ───────────────────────────────
 CurrencySymbol = Literal["USD", "EUR"]
 
 def exchange_rate(base_currency: CurrencySymbol, quote_currency: CurrencySymbol) -> float:
@@ -31,41 +29,34 @@ def currency_calculator(
     quote_amount = exchange_rate(base_currency, quote_currency) * base_amount
     return f"{quote_amount} {quote_currency}"
 
-tool = FunctionTool(
-    currency_calculator,
-    description="Currency exchange calculator.",
-    strict=True
-)
+tool = FunctionTool(currency_calculator, description="Currency exchange calculator.", strict=True)
 
-# ── assistant agent ────────────────────────────────────────────────────────────
-agent = AssistantAgent(
+# Key change ⬇︎: Tell the LLM to *finish* every answer with the follow-up line.
+currency_agent = AssistantAgent(
     name="chatbot",
     system_message=(
-        "For currency-exchange tasks, only use the function you have been "
-        "provided with. Reply when the task is done."
+        "For currency-exchange tasks, use only the provided function.\n"
+        "After you output the result, end the same message with:\n"
+        "'Is there anything else I can do?'"
     ),
     model_client=open_ai,
     tools=[tool],
 )
 
-# ── interactive main loop ──────────────────────────────────────────────────────
+def get_currency_agent():
+    return currency_agent
+
 async def main() -> None:
     print("💬  Type your request (or 'exit' to quit).")
     while True:
-        # get user input without blocking the event loop
-        prompt = await asyncio.get_running_loop().run_in_executor(
-            None, input, "\nYou: "
-        )
+        prompt = await asyncio.get_running_loop().run_in_executor(None, input, "\nYou: ")
         if prompt.strip().lower() in {"exit", "quit", "bye"}:
             print("chatbot: Goodbye! 👋")
             break
 
-        # run the agent and stream the result to the console
-        stream = agent.run_stream(task=prompt)
+        # stream the assistant’s reply (which already contains the follow-up sentence)
+        stream = currency_agent.run_stream(task=prompt)
         await Console(stream)
-
-        # follow-up prompt
-        print("\nchatbot: Is there anything else I can do?")
 
 if __name__ == "__main__":
     asyncio.run(main())
